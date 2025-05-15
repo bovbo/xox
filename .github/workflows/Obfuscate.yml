@@ -1,73 +1,46 @@
+
 name: Build Obfuscate BPB Panel
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   schedule:
-    - cron: "0 1 * * *"
-
-permissions:
-  contents: write
+    - cron: "0 1 * * *"  # 每日UTC时间1点自动检查更新
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Get latest version
+        id: version
+        run: |
+          echo "LATEST=$(curl -s https://api.github.com/repos/bia-pain-bache/BPB-Worker-Panel/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: "latest"
+          node-version: "20"
 
-      - name: Install dependencies
+      - name: Install tools
         run: |
-          npm install -g javascript-obfuscator
-          sudo apt-get install -y unzip jq  # 添加jq用于解析JSON
+          npm install -g javascript-obfuscator@4.0.0
+          sudo apt-get install -y unzip
 
-      - name: 获取最新版本号
-        id: get_version
+      - name: Download worker
         run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/bia-pain-bache/BPB-Worker-Panel/releases/latest | jq -r .tag_name)
-          echo "最新版本号: $LATEST_VERSION"
-          echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
-
-      - name: 下载并解压最新worker
-        run: |
-          # 动态构建下载链接
-          DOWNLOAD_URL="https://github.com/bia-pain-bache/BPB-Worker-Panel/releases/download/${{ env.LATEST_VERSION }}/worker.zip"
-          
-          echo "正在下载: $DOWNLOAD_URL"
-          wget -q "$DOWNLOAD_URL" -O worker.zip
-          
-          if [ ! -f worker.zip ]; then
-            echo "::error::文件下载失败，请检查版本号和文件名"
-            exit 1
-          fi
-          
+          wget https://github.com/bia-pain-bache/BPB-Worker-Panel/releases/download/${{ steps.version.outputs.LATEST }}/worker.zip
           unzip -o worker.zip
-          mv _worker.js origin.js
+          [ -f _worker.js ] && mv _worker.js origin.js || mv worker.js origin.js
 
-      - name: 混淆处理
+      - name: Obfuscate code
         run: |
           javascript-obfuscator origin.js --output _worker.js \
-          --compact true \
-          --identifier-names-generator hexadecimal \
-          --rename-globals true \
-          --string-array true \
-          --string-array-encoding 'base64' \
-          --string-array-threshold 0.75 \
-          --transform-object-keys true \
-          --self-defending false \
-          --simplify true
+            --compact true \
+            --identifier-names-generator hexadecimal \
+            --string-array-encoding base64 \
+            --transform-object-keys true
 
-      - name: 自动提交变更
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          branch: main
-          commit_message: ":arrow_up: 自动更新到 ${{ env.LATEST_VERSION }}"
-          commit_author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
-          push_options: '--set-upstream'
+          commit_message: "chore: Update to ${{ steps.version.outputs.LATEST }}"
