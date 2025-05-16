@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "0 1 * * *" # 每天凌晨1点运行
+    - cron: "0 5 * * *" # 每天凌晨1点运行
   workflow_dispatch:
     inputs:
       force_update:
