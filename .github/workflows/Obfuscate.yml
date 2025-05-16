@@ -1,4 +1,4 @@
-name: Build Obfuscate BPB Panel
+name: Auto Update Worker
 
 on:
   push:
@@ -80,4 +80,3 @@ jobs:
         with:
           commit_message: "🔄 自动同步 Worker 版本: ${{ steps.check_update.outputs.tag_name || '未知' }}"
           commit_author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-		  
