@@ -25,6 +25,15 @@ jobs:
         run: |
           git rm -f ${{ github.event.inputs.target_file }}
           git commit -m "自动化删除文件: ${{ github.event.inputs.target_file }}"
+
+      - name: Push to branch main
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+           github_token: ${{ secrets.GH_PAT }}
+      - name: Push to branch main
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+           github_token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Push Changes
         uses: ad-m/github-push-action@master
@@ -32,3 +41,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
           force: true
+
