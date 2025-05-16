@@ -1,25 +1,29 @@
-name: Cleanup Files
+name: Clean Root Directory
 
 on:
-  workflow_dispatch: # 手动触发
-  schedule:
-    - cron: "0 3 * * *" # 每天凌晨3点自动清理
+  workflow_dispatch:
+    inputs:
+      target_file:
+        description: '要删除的文件名（需包含扩展名）'
+        required: true
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: 删除旧文件
-        run: |
-          # 删除单个文件
-          rm -f path/to/old_file.txt
-          
-
-
-      - name: 提交更改
-        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "🧹 自动清理旧文件"
+          persist-credentials: false # 必须关闭凭证持久化
+
+      - name: Delete File
+        run: |
+          git rm -f ${{ github.event.inputs.target_file }}
+          git commit -m "自动化删除文件: ${{ github.event.inputs.target_file }}"
+          
+      - name: Push Changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+          force: true
