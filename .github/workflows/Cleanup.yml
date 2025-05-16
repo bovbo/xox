@@ -17,8 +17,7 @@ jobs:
           # 删除单个文件
           rm -f path/to/old_file.txt
           
-          # 删除整个文件夹
-          rm -rf path/to/old_directory/
+
 
       - name: 提交更改
         uses: stefanzweifel/git-auto-commit-action@v5
