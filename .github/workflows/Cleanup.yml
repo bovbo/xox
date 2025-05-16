@@ -14,31 +14,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          persist-credentials: false # 必须关闭凭证持久化
-      
-      - name: Configure Git
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          # 必须设置 fetch-depth 以获取完整提交历史
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Delete File
+      - name: 配置 Git 身份
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: 删除文件
         run: |
           git rm -f ${{ github.event.inputs.target_file }}
-          git commit -m "自动化删除文件: ${{ github.event.inputs.target_file }}"
+          git commit -m "🗑️ 自动删除文件: ${{ github.event.inputs.target_file }}"
 
-      - name: Push to branch main
+      - name: 推送更改
         uses: ad-m/github-push-action@v0.6.0
-        with:
-           github_token: ${{ secrets.GH_PAT }}
-      - name: Push to branch main
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-           github_token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Push Changes
-        uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
-          force: true
-
+          # 强制推送仅在必要时启用（会覆盖历史）
+          # force: true
