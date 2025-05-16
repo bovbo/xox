@@ -17,7 +17,7 @@ jobs:
           # 必须设置 fetch-depth 以获取完整提交历史
           fetch-depth: 0
           persist-credentials: false
-
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: 配置 Git 身份
         run: |
           git config --global user.name "github-actions[bot]"
